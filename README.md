@@ -1,8 +1,6 @@
 # Store Transaction Management API
 
-A RESTful API built with Node.js, Express, TypeScript, and MongoDB for managing transactionsbanking operations.
-
-
+A RESTful API built with Node.js, Express, TypeScript, and MongoDB for managing banking operations including deposits, withdrawals, transfers, and currency conversions.
 
 ## Tech Stack
 
@@ -10,7 +8,9 @@ A RESTful API built with Node.js, Express, TypeScript, and MongoDB for managing 
 - Express.js
 - TypeScript
 - MongoDB
-- Jest
+- Mongoose ORM
+- JWT Authentication
+- Jest & Supertest for testing
 - Docker
 - Swagger/OpenAPI
 
@@ -34,7 +34,7 @@ Development mode:
 npm run dev
 ```
 
-Transactionion mode:
+Production mode:
 ```bash
 npm run build
 npm start
@@ -51,22 +51,29 @@ docker-compose up
 
 All endpoints require JWT token authentication via Bearer token.
 
-### Transactions
+| Method | Endpoint                   | Description                    | Required Role    |
+|--------|----------------------------|--------------------------------|------------------|
+| POST   | /api/v1/auth/register      | Register a new user            | None             |
+| POST   | /api/v1/auth/login         | Login user                     | None             |
+| GET    | /api/v1/auth/profile       | Get user profile               | User             |
 
-| Method | Endpoint | Description | Role |
-|--------|----------|-------------|------|
-| GET | /api/v1/banking/balance| Retrieve users balance | User,Admin |
-| POST | /api/v1/banking/withdraw| Withdraw Funds | User, Admin |
-| POST | /api/v1/banking/deposit | Deposit funds | Open |
-| POST | /api/v1/banking/transfer | Transfer Funds | User, Admin|
-| GET | /api/v1/banking/transaction-history | Get Users Transaction history | User, Admin |
+### Banking Operations
+
+| Method | Endpoint                              | Description                    | Required Role    |
+|--------|---------------------------------------|--------------------------------|------------------|
+| GET    | /api/v1/banking/balance              | Retrieve user's balance        | User, Admin      |
+| POST   | /api/v1/banking/withdraw             | Withdraw funds                 | User, Admin      |
+| POST   | /api/v1/banking/deposit              | Deposit funds                  | Open             |
+| POST   | /api/v1/banking/transfer             | Transfer funds                 | User, Admin      |
+| GET    | /api/v1/banking/transaction-history  | Get transaction history        | User, Admin      |
+| GET    | /api/v1/banking/currency-rates       | Get current currency rates     | User, Admin      |
+| POST   | /api/v1/banking/convert-currency     | Convert between currencies     | User, Admin      |
 
 ### Health Check
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | /health | API health status |
-
+| Method | Endpoint | Description       |
+|--------|----------|-------------------|
+| GET    | /health  | API health status |
 
 ## API Documentation
 
@@ -74,9 +81,20 @@ The API documentation is available at `/api-docs` when the server is running.
 
 ## Testing
 
+### Prerequisites
+
+The test suite uses MongoDB Memory Server with a replica set to support transactions. No external database is required.
+
+### Running Tests
+
 Run the test suite:
 ```bash
 npm test
+```
+
+Run individual test files:
+```bash
+npm test -- banking.service.test.ts
 ```
 
 Generate coverage report:
@@ -86,56 +104,98 @@ npm run test:coverage
 
 ## Security Features
 
-- JWT Authentication
-- Role-based Access Control
+- JWT Authentication and Authorization
+- Role-based Access Control (User, Admin)
+- Transaction PIN for sensitive operations
 - Rate Limiting
 - Helmet Security Headers
 - CORS Configuration
-- Input Validation
-- Error Handling
+- Input Validation with Class-validator
+- Comprehensive Error Handling
+- Audit Logging for all banking operations
 
 ## Database Design
 
+### User Schema
+- email (String, unique, indexed)
+- password (String, hashed)
+- firstName (String)
+- lastName (String)
+- role (Enum: User, Admin)
+- timestamps (createdAt, updatedAt)
+
+### User Account Schema
+- user (ObjectId, ref: 'User')
+- accountNumber (String, unique, indexed)
+- accountName (String)
+- pin (String, hashed)
+- isActive (Boolean)
+- timestamps (createdAt, updatedAt)
+
+### Wallet Schema
+- user (ObjectId, ref: 'User')
+- balance (Number)
+- currency (String, default: 'USD')
+- isActive (Boolean)
+- timestamps (createdAt, updatedAt)
+
 ### Transaction Schema
-- name (String, indexed)
+- sender (ObjectId, ref: 'User')
+- receiver (ObjectId, ref: 'User')
+- amount (Number)
+- currency (String)
+- type (Enum: Deposit, Withdrawal, Transfer)
+- status (Enum: Pending, Completed, Failed)
+- reference (String, unique)
 - description (String)
-- price (Number)
-- stock (Number)
-- sku (String, unique, indexed)
+- timestamps (createdAt, updatedAt)
+
+### Rates Schema
+- baseCurrency (String)
+- targetCurrency (String)
+- rate (Number)
 - timestamps (createdAt, updatedAt)
 
 ### Audit Log Schema
 - action (String, indexed)
 - resource (String, indexed)
 - resourceId (ObjectId, indexed)
-- accountId (ObjectId, indexed)
+- userId (ObjectId, indexed)
+- changes (Object)
 - timestamp (Date, indexed)
 
 ## Environment Variables
 
-| Variable | Description | Default |
-|----------|-------------|---------|
-| PORT | Server port | 3000 |
-| NODE_ENV | Environment | development |
-| MONGODB_URI | MongoDB connection string | mongodb://localhost:27017/store |
-| JWT_SECRET | JWT signing key | - |
-| JWT_EXPIRATION_MINUTES | JWT token expiration | 60 |
-| RATE_LIMIT_WINDOW_MS | Rate limit window | 900000 |
-| RATE_LIMIT_MAX | Max requests per window | 100 |
+| Variable                  | Description                    | Default                        |
+|---------------------------|--------------------------------|--------------------------------|
+| PORT                      | Server port                    | 3000                           |
+| NODE_ENV                  | Environment                    | development                    |
+| MONGODB_URI               | MongoDB connection string      | mongodb://localhost:27017/store|
+| JWT_SECRET                | JWT signing key                | -                              |
+| JWT_EXPIRATION_MINUTES    | JWT token expiration           | 60                             |
+| RATE_LIMIT_WINDOW_MS      | Rate limit window              | 900000                         |
+| RATE_LIMIT_MAX            | Max requests per window        | 100                            |
+| COMPANY_USER_ID           | ID of the company account      | -                              |
 
 ## Error Handling
 
 The API uses standard HTTP status codes and returns error responses in the following format:
 ```json
 {
+  "success": false,
   "status": 400,
   "message": "Error message"
 }
 ```
 
-## Postman Doc
+## Success Responses
 
-https://red-station-952839.postman.co/workspace/postman_swagger_express~7f8f6615-c701-4661-91ee-5f08bf27ffc3/collection/23034417-046f1ce3-6fdc-4853-97e4-dd5a6cd9d759?action=share&creator=23034417&active-environment=23034417-6bf2f5f2-460d-4a91-a6f1-a8596f24ae53
-
-## Note
-- Account schema not included as its out of scope
+Success responses follow this format:
+```json
+{
+  "success": true,
+  "data": {
+    // Response data
+  }
+}
+```
