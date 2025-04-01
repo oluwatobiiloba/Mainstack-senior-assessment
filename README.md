@@ -135,7 +135,7 @@ The API uses standard HTTP status codes and returns error responses in the follo
 
 ## Postman Doc
 
-https://documenter.getpostman.com/view/23034417/2sB2cPik6V
+https://red-station-952839.postman.co/workspace/postman_swagger_express~7f8f6615-c701-4661-91ee-5f08bf27ffc3/collection/23034417-046f1ce3-6fdc-4853-97e4-dd5a6cd9d759?action=share&creator=23034417&active-environment=23034417-6bf2f5f2-460d-4a91-a6f1-a8596f24ae53
 
 ## Note
 - Account schema not included as its out of scope

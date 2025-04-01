@@ -19,7 +19,7 @@ const options: swaggerJsdoc.Options = {
         description: 'Development server',
       },
       {
-        url: 'https://mainstack-assessment.onrender.com',
+        url: 'https://mainstack-senior-assessment.onrender.com',
         description: 'Live API Deployed on render'
       }
     ],

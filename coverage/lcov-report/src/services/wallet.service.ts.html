@@ -349,7 +349,7 @@ import { CreditWalletDto, DebitWalletDto } from "@/dtos/wallet.dto";
 import { codes } from 'currency-codes';
 &nbsp;
 export class WalletService {
-  private COMPANY_ID = process.env.COMPANY_WALLET_ID || <span class="branch-1 cbranch-no" title="branch not covered" >"company";</span>
+  private COMPANY_ID = process.env.COMPANY_USER_ID || <span class="branch-1 cbranch-no" title="branch not covered" >"company";</span>
   
 <span class="fstat-no" title="function not covered" >  async </span>getWalletById(walletId: string) {
       const wallet = <span class="cstat-no" title="statement not covered" >await Wallet.findById(walletId)</span>

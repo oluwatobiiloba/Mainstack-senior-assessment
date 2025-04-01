@@ -8,7 +8,7 @@ import { CreditWalletDto, DebitWalletDto } from "@/dtos/wallet.dto";
 import { codes } from 'currency-codes';
 
 export class WalletService {
-  private COMPANY_ID = process.env.COMPANY_WALLET_ID || "company";
+  private COMPANY_ID = process.env.COMPANY_USER_ID;
   
   async getWalletById(walletId: string) {
       const wallet = await Wallet.findById(walletId)
